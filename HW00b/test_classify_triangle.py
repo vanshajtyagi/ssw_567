@@ -13,6 +13,7 @@ class TestTriangleClassification:
         assert classify_triangle(0.5, 0.5, 0.5) == "Equilateral"
         assert classify_triangle(100, 100, 100) == "Equilateral"
         assert classify_triangle(7, 7, 7) == "Equilateral"
+        assert classify_triangle(45, 45, 45) == "Equilateral"
 
     def test_isosceles_triangles(self):
         """Test isosceles triangles (two sides equal)"""

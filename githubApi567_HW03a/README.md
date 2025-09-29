@@ -1,6 +1,6 @@
 # GitHub API Repository Analyzer
 
-[![GitHub Actions CI](https://github.com/vanshajtyagi/ssw_567/workflows/GitHub%20API%20Testing%20Pipeline/badge.svg)](https://github.com/vanshajtyagi/ssw_567/actions)
+
 [![Python](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue.svg)](https://www.python.org/)
 [![OS](https://img.shields.io/badge/OS-Ubuntu%20%7C%20Windows%20%7C%20macOS-blue.svg)](https://github.com/vanshajtyagi/ssw_567/actions)
 

@@ -1,0 +1,214 @@
+name: GitHub API Testing Pipeline
+
+# Trigger on pushes and pull requests to main branch
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  # Main test job with comprehensive reporting
+  test:
+    name: Test with Coverage & Reports
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('githubApi567_HW03a/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        cd githubApi567_HW03a
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov pytest-html pytest-json-report
+    
+    - name: Run tests with coverage and reports
+      run: |
+        cd githubApi567_HW03a
+        python -m pytest test_github_api.py -v \
+          --tb=short \
+          --cov=github_api \
+          --cov-report=html:htmlcov \
+          --cov-report=xml:coverage.xml \
+          --cov-report=term \
+          --html=test-report.html \
+          --self-contained-html \
+          --json-report --json-report-file=test-report.json
+    
+    - name: Test main function execution
+      run: |
+        cd githubApi567_HW03a
+        python -c "from github_api import get_user_repos_with_commits; print('✅ Function imported successfully')"
+    
+    - name: Upload test reports
+      uses: actions/upload-artifact@v3
+      if: always()  # Upload even if tests fail
+      with:
+        name: test-reports-python3.11
+        path: |
+          githubApi567_HW03a/test-report.html
+          githubApi567_HW03a/test-report.json
+          githubApi567_HW03a/htmlcov/
+          githubApi567_HW03a/coverage.xml
+        retention-days: 30
+    
+    - name: Upload coverage to Codecov (Optional)
+      uses: codecov/codecov-action@v3
+      if: success()
+      with:
+        file: githubApi567_HW03a/coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+  # Multi-version Python testing
+  test-python-versions:
+    name: Test Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-py${{ matrix.python-version }}-pip-${{ hashFiles('githubApi567_HW03a/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-py${{ matrix.python-version }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        cd githubApi567_HW03a
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov
+    
+    - name: Run tests with coverage
+      run: |
+        cd githubApi567_HW03a
+        python -m pytest test_github_api.py -v --cov=github_api --cov-report=term
+    
+    - name: Test function import
+      run: |
+        cd githubApi567_HW03a
+        python -c "from github_api import get_user_repos_with_commits; print('✅ Python ${{ matrix.python-version }} - Function works!')"
+
+  # Multi-OS testing (Linux, Windows, macOS)
+  test-multi-os:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.11']
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install dependencies (Unix)
+      if: runner.os != 'Windows'
+      run: |
+        cd githubApi567_HW03a
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov
+    
+    - name: Install dependencies (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        cd githubApi567_HW03a
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov
+    
+    - name: Run tests (Unix)
+      if: runner.os != 'Windows'
+      run: |
+        cd githubApi567_HW03a
+        python -m pytest test_github_api.py -v --cov=github_api
+    
+    - name: Run tests (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        cd githubApi567_HW03a
+        python -m pytest test_github_api.py -v --cov=github_api
+    
+    - name: Test function import (Unix)
+      if: runner.os != 'Windows'
+      run: |
+        cd githubApi567_HW03a
+        python -c "from github_api import get_user_repos_with_commits; print('✅ ${{ matrix.os }} - Function works!')"
+    
+    - name: Test function import (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        cd githubApi567_HW03a
+        python -c "from github_api import get_user_repos_with_commits; print('✅ ${{ matrix.os }} - Function works!')"
+
+  # Combined matrix testing (Optional - all combinations)
+  test-comprehensive:
+    name: Test Python ${{ matrix.python-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    if: github.event_name == 'pull_request'  # Only run on PRs to save resources
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+        # Exclude some combinations to reduce job count if needed
+        exclude:
+          - os: macos-latest
+            python-version: '3.9'
+          - os: windows-latest
+            python-version: '3.9'
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install dependencies
+      run: |
+        cd githubApi567_HW03a
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov
+    
+    - name: Run tests
+      run: |
+        cd githubApi567_HW03a
+        python -m pytest test_github_api.py -v --cov=github_api --cov-report=term

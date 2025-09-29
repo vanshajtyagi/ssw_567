@@ -2,20 +2,7 @@ import requests
 import json
 
 def get_user_repos_with_commits(user_id):
-    """
-    Retrieve user repositories and their commit counts.
-    
-    Args:
-        user_id (str): GitHub username
-        
-    Returns:
-        list: List of dictionaries with repo name and commit count
-        
-    Raises:
-        ValueError: For invalid user input
-        requests.exceptions.RequestException: For API request failures
-    """
-    
+  
     # Input validation - fix the validation logic
     if not user_id or not isinstance(user_id, str) or user_id.strip() == "":
         raise ValueError("User ID must be a non-empty string")
@@ -42,6 +29,7 @@ def get_user_repos_with_commits(user_id):
             raise requests.exceptions.RequestException(f"Invalid JSON response: {str(e)}")
         
         result = []
+        total_commits = 0
         
         for repo in repositories:
             repo_name = repo['name']
@@ -67,9 +55,16 @@ def get_user_repos_with_commits(user_id):
                 'commit_count': commit_count
             })
             
+            total_commits += commit_count
+
             # Display output as required
-            print(f"Repo: {repo_name} Number of commits: {commit_count}")
+            print(f"Repo: {repo_name} | Number of commits: {commit_count}")
         
+        # Print summary
+        print(f"\nSummary:")
+        print(f"    Total repositories: {len(result)}")
+        print(f"    Total commits: {total_commits}")
+        print(f"    Successfully analyzed all repositories")
         return result
         
     except requests.exceptions.RequestException as e:
@@ -82,8 +77,9 @@ def get_user_repos_with_commits(user_id):
 if __name__ == "__main__":
     # Example usage
     try:
-        user_repos = get_user_repos_with_commits("vanshajtyagi")
-        print(f'Fetched Repositories from Github for user: {user_repos}')
+        user = "vanshajtyagi"
+        user_repos = get_user_repos_with_commits(user)
+        print(f'Fetched Repositories from Github for user: {user}')
         print(f"Successfully retrieved {len(user_repos)} repositories")
     except Exception as e:
         print(f"Error: {str(e)}")

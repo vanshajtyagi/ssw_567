@@ -1,3 +1,9 @@
+"""
+Comprehensive test suite for GitHub API Repository Analyzer.
+
+This module contains unit tests for the github_api module using mocking
+to ensure tests are independent of external GitHub API calls.
+"""
 import pytest
 import requests
 from unittest.mock import Mock, patch
@@ -322,6 +328,75 @@ class TestGitHubAPI:
             assert result[0]['commit_count'] == 5
             assert result[1]['repo_name'] == 'AWS-tutorials'
             assert result[1]['commit_count'] == 3
+    
+    @patch('github_api.requests.get')
+    def test_commits_api_non_200_response(self, mock_get):
+        """Cover the else branch in commits status check"""
+        mock_repos_response = Mock()
+        mock_repos_response.status_code = 200
+        mock_repos_response.json.return_value = [{'name': 'test-repo'}]
+        mock_repos_response.raise_for_status.return_value = None
+        
+        mock_commits_response = Mock()
+        mock_commits_response.status_code = 404  # Not 200
+        
+        mock_get.side_effect = [mock_repos_response, mock_commits_response]
+        
+        result = get_user_repos_with_commits("testuser")
+        assert result[0]['commit_count'] == 0
+
+    @patch('github_api.requests.get')
+    def test_commits_request_fails(self, mock_get):
+        """Cover the except RequestException block in commits"""
+        mock_repos_response = Mock()
+        mock_repos_response.status_code = 200
+        mock_repos_response.json.return_value = [{'name': 'test-repo'}]
+        mock_repos_response.raise_for_status.return_value = None
+        
+        # Second call (commits) raises exception
+        mock_get.side_effect = [
+            mock_repos_response,
+            requests.exceptions.RequestException("Request failed")
+        ]
+        
+        result = get_user_repos_with_commits("testuser")
+        assert result[0]['commit_count'] == 0
+
+    @patch('github_api.requests.get')
+    def test_exception_already_contains_github_api_message(self, mock_get):
+        """Test the else branch in final exception handling"""
+        exception_with_message = requests.exceptions.RequestException("GitHub API request failed: test error")
+        mock_get.side_effect = exception_with_message
+        
+        with pytest.raises(requests.exceptions.RequestException) as excinfo:
+            get_user_repos_with_commits("testuser")
+        
+        # Should re-raise the same exception
+        assert str(excinfo.value) == "GitHub API request failed: test error"
+
+    def test_main_function_success(self):
+        """Test the main function with successful execution"""
+        with patch('github_api.get_user_repos_with_commits') as mock_func:
+            mock_func.return_value = [{'repo_name': 'test', 'commit_count': 1}]
+            
+            with patch('builtins.print') as mock_print:
+                from github_api import main
+                main()
+                
+                mock_func.assert_called_once_with("vanshajtyagi")
+                mock_print.assert_any_call("Successfully retrieved 1 repositories")
+
+    def test_main_function_error(self):
+        """Test the main function with error handling"""
+        with patch('github_api.get_user_repos_with_commits') as mock_func:
+            mock_func.side_effect = ValueError("Test error")
+            
+            with patch('builtins.print') as mock_print:
+                from github_api import main
+                main()
+                
+                mock_print.assert_called_with("Error: Test error")
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

@@ -1,6 +1,6 @@
 # GitHub Repository Analyzer - HW03b Mocking Branch
 
-
+[![GitHub API CI Pipeline](https://github.com/vanshajtyagi/ssw_567/actions/workflows/GithubApiHW03a.yml/badge.svg)](https://github.com/vanshajtyagi/ssw_567/actions/workflows/GithubApiHW03a.yml)
 [![Python](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue.svg)](https://www.python.org/)
 [![Testing](https://img.shields.io/badge/testing-mocked%20APIs-green.svg)](https://github.com/vanshajtyagi/ssw_567/tree/HW03b_Mocking)
 

@@ -2,9 +2,9 @@ name: GitHub API CI Pipeline
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, HW03b_Mocking]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main, master, HW03b_Mocking]
 
 jobs:
   test:
